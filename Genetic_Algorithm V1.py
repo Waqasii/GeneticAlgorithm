@@ -2,7 +2,7 @@ import random
 
 
 class Chromosome():
-    def __init__(self, chromosome, population_size=None, valid_genes='10', target=None):
+    def __init__(self, chromosome, target, population_size=None, valid_genes='10'):
         self.chromosome = chromosome
         self.target = target
         self.valid_genes = valid_genes
@@ -15,7 +15,7 @@ class Chromosome():
         # TYPE2
         fitness = 0
         for gs, gt in zip(self.chromosome, self.target):
-            if gs != gt:
+            if gs == gt:
                 fitness += 1
         return fitness
 
@@ -48,7 +48,7 @@ class Chromosome():
 
         # create new Individual(offspring) using
         # generated chromosome for offspring
-        return Chromosome(child_chromosome)
+        return Chromosome(child_chromosome, target=self.target)
 
     def mutated_genes(self):
         '''
@@ -79,11 +79,16 @@ class GeneticAlgorithm():
 
         # step2: until stoppping criteria doesn't matched keep searching
         while not self.stoppingCriteria():
-            print('In step 2')
+            # print('In step 2')
 
             # sort the population in increasing order of fitness score
             self.population = sorted(
                 self.population, key=lambda x: x.fitness, reverse=True)
+
+            # TODO: remove before push
+            if self.current_generation <= 1:
+                print("Initial Fitness:", self.population[0].fitness)
+                input('Press to continue/...')
 
             if self.stoppingCriteria():
                 break
@@ -95,7 +100,7 @@ class GeneticAlgorithm():
                 new_generation.extend(self.selection())
 
                 # then by mutation
-                new_generation.extend(self.mutation())
+                new_generation.extend(self.crossOver())
                 self.population = new_generation
                 self.current_generation += 1
 
@@ -128,9 +133,12 @@ class GeneticAlgorithm():
         return self.population[:s]
 
     def crossOver(self):
-        pass
+        """This function will produce newoffspring and then it will apply mutation as well
 
-    def mutation(self):
+        Returns:
+            new_generation: This is new generated chromosome that is produced after 
+                crossover and then mutation
+        """
         # From 50% of fittest population, Individuals
         # will mate to produce offspring
         s = int((90*self.population_size)/100)

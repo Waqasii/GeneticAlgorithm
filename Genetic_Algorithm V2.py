@@ -1,23 +1,29 @@
 import random
 
+'''In V2:
+    mutation will happen by flipping the existence bit, not by adding random bit
+    Fitness is calculated by the measuring the equality with target string
+'''
+
 
 class Chromosome():
-    def __init__(self, chromosome, population_size=None, valid_genes='10', target=None):
+    def __init__(self, chromosome, target, population_size=None, valid_genes='10'):
         self.chromosome = chromosome
         self.target = target
         self.valid_genes = valid_genes
         self.fitness = self.calculate_fitness()
 
     def calculate_fitness(self):
-        # # TYPE1
-        # return self.chromosome.count('1')
+        # TYPE1
+        return self.chromosome.count('1')
 
-        # TYPE2
-        fitness = 0
-        for gs, gt in zip(self.chromosome, self.target):
-            if gs != gt:
-                fitness += 1
-        return fitness
+        # # FAILED: taking too much process time
+        # # TYPE2
+        # fitness = 0
+        # for gs, gt in zip(self.chromosome, self.target):
+        #     if gs == gt:
+        #         fitness += 1
+        # return fitness
 
     def mate(self, par2):
         '''
@@ -38,24 +44,29 @@ class Chromosome():
 
             # if prob is between 0.45 and 0.90, insert
             # gene from parent 2
-            elif prob < 0.90:
+            elif prob > 0.55 and prob < 1.0:
                 child_chromosome.append(gp2)
 
-            # otherwise insert random gene(mutate),
+            # otherwise insert random/flipped gene(mutate),
             # for maintaining diversity
             else:
-                child_chromosome.append(self.mutated_genes())
+                child_chromosome.append(self.mutated_genes(default_genes=gp2))
 
         # create new Individual(offspring) using
         # generated chromosome for offspring
-        return Chromosome(child_chromosome)
+        return Chromosome(child_chromosome, target=self.target)
 
-    def mutated_genes(self):
+    def mutated_genes(self, default_genes=None):
         '''
         create random genes for mutation
         '''
-        gene = random.choice(self.valid_genes)
-        return gene
+
+        if default_genes == '0':
+            return '1'
+
+        return '0'
+        # gene = random.choice(self.valid_genes)
+        # return gene
 
 
 class GeneticAlgorithm():
@@ -79,11 +90,16 @@ class GeneticAlgorithm():
 
         # step2: until stoppping criteria doesn't matched keep searching
         while not self.stoppingCriteria():
-            print('In step 2')
+            # print('In step 2')
 
             # sort the population in increasing order of fitness score
             self.population = sorted(
                 self.population, key=lambda x: x.fitness, reverse=True)
+
+            # TODO: remove before push
+            if self.current_generation <= 1:
+                print("Initial Fitness:", self.population[0].fitness)
+                input('Press to continue/...')
 
             if self.stoppingCriteria():
                 break
@@ -95,7 +111,7 @@ class GeneticAlgorithm():
                 new_generation.extend(self.selection())
 
                 # then by mutation
-                new_generation.extend(self.mutation())
+                new_generation.extend(self.crossOver())
                 self.population = new_generation
                 self.current_generation += 1
 
@@ -128,9 +144,6 @@ class GeneticAlgorithm():
         return self.population[:s]
 
     def crossOver(self):
-        pass
-
-    def mutation(self):
         # From 50% of fittest population, Individuals
         # will mate to produce offspring
         s = int((90*self.population_size)/100)
