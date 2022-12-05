@@ -1,4 +1,14 @@
 import random
+import pandas as pd
+
+
+def save_results(generation):
+    '''
+    save results into excel file
+    '''
+
+    df = pd.DataFrame(data={'Generation': [generation]})
+    df.to_csv('results.csv', mode='a', index=False, header=False)
 
 
 class Chromosome():
@@ -9,15 +19,8 @@ class Chromosome():
         self.fitness = self.calculate_fitness()
 
     def calculate_fitness(self):
-        # # TYPE1
-        # return self.chromosome.count('1')
-
-        # TYPE2
-        fitness = 0
-        for gs, gt in zip(self.chromosome, self.target):
-            if gs == gt:
-                fitness += 1
-        return fitness
+        # TYPE1
+        return self.chromosome.count('1')
 
     def mate(self, par2):
         '''
@@ -88,7 +91,7 @@ class GeneticAlgorithm():
             # TODO: remove before push
             if self.current_generation <= 1:
                 print("Initial Fitness:", self.population[0].fitness)
-                input('Press to continue/...')
+                # input('Press to continue/...')
 
             if self.stoppingCriteria():
                 break
@@ -108,6 +111,7 @@ class GeneticAlgorithm():
                       format(self.current_generation,
                              "".join(self.population[0].chromosome),
                              self.population[0].fitness))
+
                 # input('Press to continue....')
                 # if self.current_generation > 500:
                 #     break
@@ -115,6 +119,8 @@ class GeneticAlgorithm():
               format(self.current_generation,
                      "".join(self.population[0].chromosome),
                      self.population[0].fitness))
+
+        save_results(self.current_generation)
 
     def createChromosome(self):
 
@@ -127,13 +133,14 @@ class GeneticAlgorithm():
                 chromosome=self.createChromosome(), target=self.target))
 
     def selection(self):
-        # Elitism, that mean 15 % of fittest population
+        # Elitism, that mean 10 % of fittest population
         # goes to the next generation without any change
         s = int((10*self.population_size)/100)
         return self.population[:s]
 
     def crossOver(self):
-        """This function will produce newoffspring and then it will apply mutation as well
+        """This function will select parents to produce newoffspring and then
+        it will apply mutation as well.
 
         Returns:
             new_generation: This is new generated chromosome that is produced after 
@@ -171,6 +178,6 @@ POP_SIZE = 10
 valid_genes = '10'
 TARGET = '1' * 100
 
-
-GeneticAlgorithm(population_size=POP_SIZE,
-                 valid_genes=valid_genes, target=TARGET)
+for i in range(0, 30):
+    GeneticAlgorithm(population_size=POP_SIZE,
+                     valid_genes=valid_genes, target=TARGET)
